@@ -1,0 +1,461 @@
+Attribute VB_Name = "ADO"
+Option Compare Database
+Option Explicit
+
+Sub conecta_actual()
+
+    ' Creamos una conexión utilizando el objecto connection
+    Dim miconexion As New Connection
+    
+    ' Establecemos la conexión con la BBDD actual
+    Set miconexion = CurrentProject.Connection
+    
+    ' Declaramos la variable de tipo texto
+    Dim instruccion As String
+    
+    ' Almacenamos en la variable de tipo texto la instrucción SQL
+    instruccion = "SELECT * FROM CLIENTES"
+
+    ' Creando el objeto recordset (tabla virtual)
+    Dim mirecordset As New Recordset
+    
+    ' Abrir el recordset utilizando la conexión activa e insertar la infromación de la instrucción SQL
+    mirecordset.Open instruccion, miconexion
+
+    ' Recorre el recordset hasta el final EOF (End Of File)
+    Do Until mirecordset.EOF
+    
+        ' Imprimir en la ventana lo que hay en el campo empresa del recordset
+        Debug.Print mirecordset!empresa
+    
+        ' Avanzar un registro a cada vuelta de bucle
+        mirecordset.MoveNext
+    
+    Loop
+    
+    ' Cierra el recordset
+    mirecordset.Close
+    
+    ' Libera la memoria de los recursos utilizados por el recordset
+    Set mirecordset = Nothing
+    
+    ' Cierra la conexión
+    miconexion.Close
+    
+     ' Libera la memoria de los recursos utilizados por la conexión
+    Set miconexion = Nothing
+    
+
+End Sub
+
+Function comprueba_usuario(elusuario As String) As Boolean
+
+    Dim existe_usuario As Boolean
+
+    Dim miconexion As New Connection
+    
+    Dim mirecordset As New Recordset
+    
+    Dim instruccion As String
+    
+    Set miconexion = CurrentProject.Connection
+    
+    instruccion = "SELECT usuario FROM USUARIOS"
+    
+    mirecordset.Open instruccion, miconexion
+    
+    While mirecordset.EOF = False
+    
+        If mirecordset!USUARIO = elusuario Then
+        
+            existe_usuario = True
+            
+        End If
+        
+        mirecordset.MoveNext
+    
+    Wend
+    
+    ' Cierra el recordset
+    mirecordset.Close
+    
+    ' Libera la memoria de los recursos utilizados por el recordset
+    Set mirecordset = Nothing
+    
+    ' Cierra la conexión
+    miconexion.Close
+    
+     ' Libera la memoria de los recursos utilizados por la conexión
+    Set miconexion = Nothing
+
+    comprueba_usuario = existe_usuario
+
+End Function
+
+Sub prueba_usuario()
+
+
+    MsgBox comprueba_usuario("pepe")
+
+
+End Sub
+
+Sub conecta_remoto()
+
+
+    Dim miconexion As New Connection
+    
+    Dim mirecordset As New Recordset
+    
+    Dim instruccion As String
+    
+    instruccion = "SELECT usuario FROM USUARIOS"
+    
+    miconexion.Open "Provider=Microsoft.ACE.OLEDB.12.01; Data Source=C:\Users\marcv\Desktop\BBDD_externa\gestion_formacion.accdb"
+    
+    If Err.Number = -2147467259 Then
+    
+         Dim ventana As FileDialog
+    
+        Dim obj As Variant
+    
+        Dim ruta As String
+    
+        Set ventana = Application.FileDialog(msoFileDialogFilePicker)
+    
+        With ventana
+    
+            .Title = "Elige BBDD"
+            .Filters.Add "Base de datos", "*.accdb"
+            .Show
+    
+            For Each obj In .SelectedItems
+            
+                ruta = CStr(obj)
+            
+                MsgBox ruta
+            
+            Next obj
+            
+        End With
+        
+        miconexion.Open "Provider=Microsoft.ACE.OLEDB.12.01; Data Source=" & ruta
+    
+    End If
+    
+    mirecordset.Open instruccion, miconexion, adOpenDynamic, adLockBatchOptimistic
+    
+    Do Until mirecordset.EOF
+    
+        Debug.Print mirecordset!dni & " " & mirecordset!Nombre
+    
+    Loop
+    
+    ' Cierra el recordset
+    mirecordset.Close
+    
+    ' Libera la memoria de los recursos utilizados por el recordset
+    Set mirecordset = Nothing
+    
+    ' Cierra la conexión
+    miconexion.Close
+    
+     ' Libera la memoria de los recursos utilizados por la conexión
+    Set miconexion = Nothing
+
+
+End Sub
+
+Sub pruebas()
+
+    Const msoFileDialogFilePicker As Long = 3
+    
+    Dim ventana As Object
+
+    Set ventana = Application.FileDialog(msoFileDialogFilePicker)
+    
+    Dim obj As Variant
+    
+    Dim ruta As String
+    
+    Set ventana = Application.FileDialog(msoFileDialogFilePicker)
+    
+    With ventana
+    
+        .Title = "Elige BBDD"
+        .Filters.Add "Base de datos", "*.accdb"
+        .Show
+
+        For Each obj In .SelectedItems
+        
+            ruta = CStr(obj)
+        
+            MsgBox ruta
+        
+        Next obj
+        
+    End With
+
+End Sub
+
+Sub conecta_modifica()
+
+    On Error Resume Next
+    
+    Dim miconexion As New Connection
+    
+    Dim micomando As New Command
+    
+    miconexion.Open "Provider=Microsoft.ACE.OLEDB.12.01; Data Source=C:\Users\marcv\Desktop\BBDD_externa\gestion_formacion.accdb"
+    
+    If Err.Number = -2147467259 Then
+    
+        Const msoFileDialogFilePicker As Long = 3
+    
+        Dim ventana As Object
+
+        Set ventana = Application.FileDialog(msoFileDialogFilePicker)
+        
+        Dim obj As Variant
+    
+        Dim ruta As String
+    
+        Set ventana = Application.FileDialog(msoFileDialogFilePicker)
+    
+        With ventana
+    
+            .Title = "Elige BBDD"
+            .Filters.Add "Base de datos", "*.accdb"
+            .Show
+    
+            For Each obj In .SelectedItems
+            
+                ruta = CStr(obj)
+            
+                MsgBox ruta
+            
+            Next obj
+            
+        End With
+        
+        miconexion.Open "Provider=Microsoft.ACE.OLEDB.12.01; Data Source=" & ruta
+    
+    End If
+    
+    micomando.ActiveConnection = miconexion
+    
+    micomando.CommandText = "INSERT INTO usuarios (NOMBRE,APELLIDOS,USUARIO,CONTRASENA) VALUES ('Marc','Villalobos','mmm','ddd')"
+    
+    'micomando.CommandText = "UPDATE usuario SET Nombre='Marc WHERE APELLIDO='Villalobos'"
+    
+    micomando.Execute
+    
+    ' Cierra la conexión
+    miconexion.Close
+    
+     ' Libera la memoria de los recursos utilizados por la conexión
+    Set miconexion = Nothing
+
+
+End Sub
+
+Sub conecta_mysql()
+
+
+    Dim miconexion As New Connection
+    
+    miconexion.Open "Driver=(MYSQL ODBC 5.2a Unicode Driver); Server=localhost; Database=ejemplo_conexion;User=root;Password='';Option=3"
+    
+    ' Declaramos la variable de tipo texto
+    Dim instruccion As String
+    
+    ' Almacenamos en la variable de tipo texto la instrucción SQL
+    instruccion = "SELECT * FROM ALUMNOS"
+
+    ' Creando el objeto recordset (tabla virtual)
+    Dim mirecordset As New Recordset
+    
+    ' Abrir el recordset utilizando la conexión activa e insertar la infromación de la instrucción SQL
+    mirecordset.Open instruccion, miconexion
+
+    ' Recorre el recordset hasta el final EOF (End Of File)
+    Do Until mirecordset.EOF
+    
+        ' Imprimir en la ventana lo que hay en el campo empresa del recordset
+        Debug.Print mirecordset!Nombre & " "; mirecordset!apellido
+    
+        ' Avanzar un registro a cada vuelta de bucle
+        mirecordset.MoveNext
+    
+    Loop
+    
+    ' Cierra el recordset
+    mirecordset.Close
+    
+    ' Libera la memoria de los recursos utilizados por el recordset
+    Set mirecordset = Nothing
+    
+    ' Cierra la conexión
+    miconexion.Close
+    
+     ' Libera la memoria de los recursos utilizados por la conexión
+    Set miconexion = Nothing
+    
+
+End Sub
+
+Sub ceacion_BBDD()
+
+    On Error GoTo existe
+
+    Dim micatalago As New ADOX.Catalog
+    
+    Dim ruta As String
+    
+    ruta = "C:\Users\marcv\Desktop\pruebas.accdb"
+    
+    micatalogo.Create "Provider=Microsoft.ACE.OLEDB.12.0; Date Source=" & ruta
+
+    Set micatalogo = Nothing
+    
+    Exit Sub
+    
+existe:
+    
+    If Err.Number = -2147217897 Then
+    
+        Dim decision As Integer
+    
+        MsgBox "La BBDD ya exite. ¿Quieres remplazarla?", vbYesNo
+        
+        If decision = vbYes Then
+        
+            Kill (ruta)
+        
+            Resume 0
+            
+            MsgBox "La base de datos ha sido remplazada"
+        
+        Else
+        
+            MsgBox "No se creará la BBDD"
+        
+    End If
+
+End Sub
+
+Sub crea_tabla()
+
+    On Error GoTo etiqueta
+
+    Dim miconexion As New ADODB.Connection
+    
+    Dim mibase As New ADOX.Catalog
+    
+    ' Crea la tabla en código VBA
+    Dim mitabla As New ADOX.Table
+    
+    Dim ruta As String
+    
+    ruta = "C:\Users\marcv\Desktop\pruebas.accdb"
+    
+    miconexion.Open "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" & ruta
+    
+    Set mibase.ActiveConnection = miconexion
+    
+    With mitabla
+    
+        .Name = "Empleados"
+        .ParentCatalog = mibase
+        
+        With .Columns
+        
+            .Append "Id", adInteger
+            .Item("Id").Properties("autoincrement") = True
+            
+            
+            .Append "Nombre", adVarWChar, 20
+            
+            .Append "Apellido", adVarWChar, 50
+            
+            .Append "Edad", adInteger
+            
+            .Append "Fecha_nacimiento", adDate
+        
+        End With
+    
+    End With
+    
+   mibase.Tables.Append mitabla
+   
+   Set mitabla = Nothing
+   
+   Set mibase = Nothing
+   
+   miconexion.Close
+   
+   Set miconexion = Nothing
+   
+   Exit Sub
+   
+   If Err.Description = "La tabla empleados ya existe." Then
+   
+        Dim i As Integer
+        
+        i = MsgBox("La tabla Empleados ya existe. ¿Quieres remplazarla?", vbYesNo)
+        
+       If i = vbYes Then
+        
+            mibase.Tables.Delete "Empleados"
+        
+            Resume 0
+        
+        Else
+        
+            MsgBox "No se realizará ninguna acción"
+    
+
+End Sub
+
+Sub crear_indices()
+
+
+    Dim mibase As New ADOX.Catalog
+    
+    Dim tabla As New ADOX.Table
+    
+    Dim indice As New ADOX.Index
+    
+    Dim ruta As String
+    
+    ruta = "C:\Users\marcv\Desktop\pruebas.accdb"
+     
+    mibase.ActiveConnection = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" & ruta
+    
+    Set tabla = minase.Tables("Empleados")
+    
+    With indice
+    
+    
+        .Name = "miclave"
+        .PrimaryKey = True
+        .Unique = True
+        .IndexNulls = addIndexNullsDisallow
+    
+    
+    End With
+    
+    ' Agrega el indice al campo Id
+    indice.Columns.Append "Id"
+    
+    ' Agrega el indice a la tabla
+    tabla.Indexes.Append indice
+    
+    Set indice = Nothing
+    
+    Set tabla = Nothing
+    
+    Set mibase = Nothing
+
+
+End Sub
